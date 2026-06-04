@@ -4,10 +4,13 @@ import { config } from 'dotenv';
 
 config({ path: '.env.local' });
 
-function getDb() {
-  const url = process.env.NEON_DATABASE_URL;
-  if (!url) throw new Error('NEON_DATABASE_URL environment variable is not set');
-  return drizzle(neon(url));
-}
+let _db: ReturnType<typeof drizzle> | null = null;
 
-export const db = getDb();
+export function getDb() {
+  if (!_db) {
+    const url = process.env.NEON_DATABASE_URL;
+    if (!url) throw new Error('NEON_DATABASE_URL environment variable is not set');
+    _db = drizzle(neon(url));
+  }
+  return _db;
+}

@@ -1,5 +1,5 @@
 import { cosineDistance, desc, gt, sql } from "drizzle-orm";
-import { db } from "./db-config";
+import { getDb } from "./db-config";
 import { documents } from "./db-schema";
 import { generateEmbedding } from "./embeddings";
 
@@ -22,7 +22,7 @@ export async function searchDocuments(
   )})`;
 
   // Use Drizzle's query builder for the search
-  const similarDocuments = await db
+  const similarDocuments = await getDb()
     .select({
       id: documents.id,
       content: documents.content,

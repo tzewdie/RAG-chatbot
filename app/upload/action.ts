@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/lib/db-config";
+import { getDb } from "@/lib/db-config";
 import { documents } from "@/lib/db-schema";
 import { generateEmbeddings } from "@/lib/embeddings";
 import { chunkContent } from "@/lib/chunking";
@@ -35,7 +35,7 @@ export async function processPdfFile(formData: FormData) {
       embedding: embeddings[index],
     }));
 
-    await db.insert(documents).values(records);
+    await getDb().insert(documents).values(records);
 
     return {
       success: true,

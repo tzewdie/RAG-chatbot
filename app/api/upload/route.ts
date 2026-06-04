@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db-config";
+import { getDb } from "@/lib/db-config";
 import { documents } from "@/lib/db-schema";
 import { generateEmbeddings } from "@/lib/embeddings";
 import { chunkContent } from "@/lib/chunking";
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     const embeddings = await generateEmbeddings(chunks);
 
     // Save to DB
-    await db.insert(documents).values(
+    await getDb().insert(documents).values(
       chunks.map((chunk, i) => ({
         content: chunk,
         embedding: embeddings[i],
