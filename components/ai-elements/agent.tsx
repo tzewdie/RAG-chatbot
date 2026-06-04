@@ -1,5 +1,6 @@
 "use client";
 
+import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import {
   Accordion,
   AccordionContent,
@@ -75,7 +76,7 @@ export const AgentInstructions = memo(
   )
 );
 
-export type AgentToolsProps = ComponentProps<typeof Accordion>;
+export type AgentToolsProps = Omit<AccordionPrimitive.AccordionMultipleProps, 'type'> & { className?: string };
 
 export const AgentTools = memo(({ className, ...props }: AgentToolsProps) => (
   <div className={cn("space-y-2", className)}>
