@@ -11,6 +11,8 @@ import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { searchDocuments } from '@/lib/search';
 
+export const dynamic = 'force-dynamic';
+
 const tools = {
   searchKnowledgeBase: tool({
     description: "Search the knowledge base for relevant information",
