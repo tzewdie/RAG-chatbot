@@ -38,9 +38,31 @@ import {
   PromptInputTools,
   usePromptInputAttachments,
 } from '@/components/ai-elements/prompt-input';
-import { Fragment, useState } from 'react';
+import { Fragment, useCallback, useRef, useState } from 'react';
+
+function useSpeech() {
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [speaking, setSpeaking] = useState(false);
+
+  const speak = useCallback((text: string) => {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utteranceRef.current = utterance;
+    utterance.onstart = () => setSpeaking(true);
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
+  const stop = useCallback(() => {
+    window.speechSynthesis.cancel();
+    setSpeaking(false);
+  }, []);
+
+  return { speak, stop, speaking };
+}
 import { useChat } from '@ai-sdk/react';
-import { CopyIcon, GlobeIcon, RefreshCcwIcon } from 'lucide-react';
+import { BookOpenIcon, BugIcon, CopyIcon, GlobeIcon, RefreshCcwIcon, Volume2Icon, VolumeXIcon } from 'lucide-react';
 import {
   Source,
   Sources,
@@ -76,11 +98,11 @@ const PromptInputAttachmentsDisplay = () => {
 const models = [
   {
     name: 'GPT 4o',
-    value: 'openai/gpt-4o',
+    value: 'gpt-4o',
   },
   {
-    name: 'Deepseek R1',
-    value: 'deepseek/deepseek-r1',
+    name: 'GPT 4.1',
+    value: 'gpt-4.1',
   },
   {
     name: 'GPT 4.1 mini',
@@ -91,6 +113,9 @@ const ChatBotDemo = () => {
   const [input, setInput] = useState('');
   const [model, setModel] = useState<string>(models[0].value);
   const [webSearch, setWebSearch] = useState(false);
+  const [jiraSearch, setJiraSearch] = useState(false);
+  const [wikiSearch, setWikiSearch] = useState(false);
+  const { speak, stop, speaking } = useSpeech();
   const { messages, sendMessage, status, regenerate } = useChat();
   const handleSubmit = (message: PromptInputMessage) => {
     const hasText = Boolean(message.text);
@@ -107,6 +132,8 @@ const ChatBotDemo = () => {
         body: {
           model: model,
           webSearch: webSearch,
+          jiraSearch: jiraSearch,
+          wikiSearch: wikiSearch,
         },
       },
     );
@@ -149,8 +176,16 @@ const ChatBotDemo = () => {
                               {part.text}
                             </MessageResponse>
                           </MessageContent>
-                          {message.role === 'assistant' && i === messages.length - 1 && (
+                          {message.role === 'assistant' && (
                             <MessageActions>
+                              <MessageAction
+                                onClick={() => speaking ? stop() : speak(part.text)}
+                                label={speaking ? 'Stop' : 'Read aloud'}
+                              >
+                                {speaking
+                                  ? <VolumeXIcon className="size-3" />
+                                  : <Volume2Icon className="size-3" />}
+                              </MessageAction>
                               <MessageAction
                                 onClick={() => regenerate()}
                                 label="Retry"
@@ -210,10 +245,24 @@ const ChatBotDemo = () => {
               </PromptInputActionMenu>
               <PromptInputButton
                 variant={webSearch ? 'default' : 'ghost'}
-                onClick={() => setWebSearch(!webSearch)}
+                onClick={() => { setWebSearch(!webSearch); setJiraSearch(false); setWikiSearch(false); }}
               >
                 <GlobeIcon size={16} />
-                <span>Search</span>
+                <span>Web Search</span>
+              </PromptInputButton>
+              <PromptInputButton
+                variant={jiraSearch ? 'default' : 'ghost'}
+                onClick={() => { setJiraSearch(!jiraSearch); setWebSearch(false); setWikiSearch(false); }}
+              >
+                <BugIcon size={16} />
+                <span>Jira</span>
+              </PromptInputButton>
+              <PromptInputButton
+                variant={wikiSearch ? 'default' : 'ghost'}
+                onClick={() => { setWikiSearch(!wikiSearch); setWebSearch(false); setJiraSearch(false); }}
+              >
+                <BookOpenIcon size={16} />
+                <span>Wiki</span>
               </PromptInputButton>
               <PromptInputSelect
                 onValueChange={(value) => {
